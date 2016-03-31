@@ -24,7 +24,7 @@ class RunSet:
         self.runs.append(r)
 
     def record(self, r):
-        json.dump(r, self.file)
+        json.dump(r, self.file, sort_keys=True)
         self.file.write("\n")
         self.file.flush()
         self.runs.append(r);
@@ -33,7 +33,7 @@ class RunSet:
         for r in self.runs:
             found = True
             for k in list(p.keys()):
-                found = found and p[k] == r[k]
+                found = found and abs(p[k] - r[k]) < 0.00001
             if found:
                 return r
         return None
