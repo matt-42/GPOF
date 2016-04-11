@@ -2,6 +2,12 @@ import copy
 import sys
 import numpy as np
 
+# Hold a parameter range and a value.
+class RV:
+    def __init__(self, value, range):
+        self.value = value
+        self.range = range
+
 def grid_sampling_rec(runner, params, params_keys, params_to_run, d):
 
     if d == len(params_keys):
@@ -21,13 +27,14 @@ def grid_sampling_rec(runner, params, params_keys, params_to_run, d):
             grid_sampling_rec(runner, params, params_keys, copy.deepcopy(params_to_run), d + 1);
 
 def grid_sampling(runner, config):
-    return grid_sampling_rec(runner, config, list(config.keys()), params, 0);
-
-# Hold a parameter range and a value.
-class RV:
-    def __init__(self, value, range):
-        self.value = value
-        self.range = range
+    # build the initial paramset
+    paramset = dict()
+    for k in list(config.keys()):
+        if type(config[k]) is not list:
+            paramset[k] = config[k];
+        else:
+            paramset[k] = config[k][0];
+    return grid_sampling_rec(runner, config, list(config.keys()), paramset, 0);
 
 class GradientDescentConfig:
     def __init__(self, cost, max_iterations, parameters, iterator = "linear_prediction", constraint=None):

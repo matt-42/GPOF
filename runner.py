@@ -1,6 +1,6 @@
 import multiprocessing as mp
 import numpy as np
-from runset import open_runset
+from GPOF.runset import open_runset
 from tempfile import mkstemp
 import yaml
 
@@ -28,15 +28,8 @@ class Runner:
         if run:
             return run
         
-        # Create the result file.
-        _,fn = mkstemp()
-
         # Run the function.
-        self.to_optimise(params, fn)
-
-        # Load the result yaml file.
-        f=open(fn, 'r')
-        r = yaml.load(f)
+        r = self.to_optimise(params)
  
         # Merge params and result dicts.
         run = params.copy()

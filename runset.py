@@ -1,6 +1,11 @@
 import os.path
 import json
 
+class RunSetView:
+    def __init__(self, col_names, data):
+        self.col_names = col_names
+        self.data = data
+
 class RunSet:
     def __init__(self):
         self.runs = []
@@ -19,6 +24,14 @@ class RunSet:
             return []
 
         return [r[name] for r in self.runs]
+
+    def view(self, cols, filter = lambda x : True):
+        rs = []
+        for r in self.runs:
+            if filter(r):
+                rs.append([r[cname] for cname in cols])
+
+        return RunSetView(cols, rs)
 
     def add_run(self, r):
         self.runs.append(r)
