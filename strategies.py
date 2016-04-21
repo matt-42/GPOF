@@ -330,13 +330,13 @@ def gradient_descent2(runner, config):
                             nps = copy.deepcopy(paramset)
 
                             if direction[k] < 0:
-                                nps[k] = prev_value_in_range(config.parameters[k].range, bestv)
+                                nps[k] = prev_value_in_range(config.parameters[k].range, current_value)
                             else:
-                                nps[k] = next_value_in_range(config.parameters[k].range, bestv)
+                                nps[k] = next_value_in_range(config.parameters[k].range, current_value)
 
                             res = runner.run(nps)
                             step_cost = config.cost(res)
-                            print("Cost: %f, value: %f" % (pred_cost, nps[k]))
+                            print("Cost: %f, value: %f" % (step_cost, nps[k]))
                             if step_cost < bestc:
                                 paramset[k] = nps[k]
                                 current_cost = step_cost
