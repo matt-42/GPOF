@@ -15,11 +15,8 @@ def grid_sampling_rec(runner, params, params_keys, params_to_run, d):
     else:
         k=params_keys[d]
         p=params[k]
-        if type(p) is list:
-            min=params[k][0]
-            max=params[k][1]
-            step=params[k][2]
-            for i in np.arange(min, max, step):
+        if isinstance(p, (np.ndarray, list)):
+            for i in p:
                 params_to_run[k]=i
                 grid_sampling_rec(runner, params, params_keys, copy.deepcopy(params_to_run), d + 1);
         else:
@@ -37,11 +34,12 @@ def grid_sampling(runner, config):
     return grid_sampling_rec(runner, config, list(config.keys()), paramset, 0);
 
 class GradientDescentConfig:
-    def __init__(self, cost, max_iterations, parameters, iterator = "linear_prediction", constraint=None):
+    def __init__(self, cost, max_iterations, parameters, iterator = "linear_prediction", constraint=None,starting_point=None):
         self.cost = cost
         self.max_iterations = max_iterations
         self.parameters = parameters
         self.iterator = iterator
+        self.starting_point = starting_point
         if constraint:
             self.constraint = constraint
         else:
@@ -91,6 +89,7 @@ Minimise the cost function and try to stay in the givent constraints.
 
 config:
   cost: lambda r: r['p1'] + 10 * r['p2']
+  starting_point: paramset
   parameters:
     p1: 23.3
     p2: a starting point and a range  (parameter to optimize)
@@ -106,13 +105,22 @@ def gradient_descent(runner, config):
     # build the initial paramset
     paramset = dict()
     direction = dict()
-    for k in list(config.parameters.keys()):
-        direction[k] = 1
-        if type(config.parameters[k]) is not RV:
-            paramset[k] = config.parameters[k];
-        else:
-            paramset[k] = config.parameters[k].value;
-
+    if config.starting_point is None:
+        for k in list(config.parameters.keys()):
+            direction[k] = 1
+            if type(config.parameters[k]) is not RV:
+                paramset[k] = config.parameters[k];
+            else:
+                paramset[k] = config.parameters[k].value;
+    else:
+        for k in list(config.parameters.keys()):
+            direction[k] = 1
+            if type(config.parameters[k]) is not RV:
+                paramset[k] = type(config.parameters[k])(config.starting_point[k]);
+            else:
+                paramset[k] = type(config.parameters[k].value)(config.starting_point[k]);
+            
+    
     # Test if it satisfies the constraint.    
     res = runner.run(paramset)
     current_cost = config.cost(res)
@@ -181,7 +189,7 @@ def gradient_descent(runner, config):
                             nps[k] = v
                             res = runner.run(nps)
                             pred_cost = config.cost(res)
-                            print("Cost: %f, value: %f" % (pred_cost, paramset[k]))
+                            print("Cost: %f, value: %f" % (pred_cost, nps[k]))
                             if pred_cost < bestc: # if it does not lower the cost, fallback to a step
                                 paramset[k] = v
                                 current_cost = pred_cost
