@@ -12,7 +12,7 @@ class RunSet:
         self.cache = dict()
 
     def close(self):
-        if self.file:
+        if hasattr(self, 'file'):
             self.file.close()
             self.file = None
 
@@ -86,3 +86,26 @@ def open_runset(filename, name = None):
             runs_str = runs_str[idx:].lstrip();
     
     return rs;
+
+def open_runset_from_google_benchmark(filename, name = None):
+    f = open(filename, 'r+')
+    results = json.load(f)['benchmarks']
+    sets = {}
+    for r in results:
+        name = r['name'].split('/')[0]
+
+        if not name in sets:
+            sets.update({name: RunSet()})
+            sets[name].name = name
+        run = {}
+        params = r['name'].split('/')
+
+        run['real_time'] = r['real_time']
+        run['cpu_time'] = r['cpu_time']
+        if len(params) >= 2:
+            run['range_x'] = float(params[1])
+        if len(params) >= 3:
+            run['range_y'] = float(params[2])
+
+        sets[name].add_run(run)
+    return sets

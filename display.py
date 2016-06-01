@@ -18,7 +18,7 @@ def display_2d_points(view):
 
     sp.set_xlabel(view.col_names[0])
     sp.set_ylabel(view.col_names[1])
-    
+
     im = sp.plot(A, B, '+')
     fig.show()
  

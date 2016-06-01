@@ -319,7 +319,7 @@ def gradient_descent2(runner, config):
                             res = runner.run(nps)
                             pred_cost = config.cost(res)
                             print("Cost: %f, value: %f" % (pred_cost, nps[k]))
-                            if pred_cost < bestc: # if it does not lower the cost, fallback to a step
+                            if pred_cost < current_cost: # if it does not lower the cost, fallback to a step
                                 paramset[k] = v
                                 current_cost = pred_cost
                                 current_value = v
@@ -334,46 +334,16 @@ def gradient_descent2(runner, config):
                             else:
                                 nps[k] = next_value_in_range(config.parameters[k].range, current_value)
 
-                            res = runner.run(nps)
-                            step_cost = config.cost(res)
-                            print("Cost: %f, value: %f" % (step_cost, nps[k]))
-                            if step_cost < bestc:
-                                paramset[k] = nps[k]
-                                current_cost = step_cost
-                                current_value = nps[k]
-                                print("BEST COST FOUND: %f" % step_cost)
-                                k_local_min=False
-
-                        
-                #   If their is a new minimum
-                if bestv is not None and bestc < current_cost:
-                    direction[k] = bestv - current_value # save the direction for the next step.
-                    local_minimum=False
-                    paramset[k] = bestv
-                    current_cost = bestc
-
-                    print("BEST COST FOUND: %f" % bestc)
-                    # Save it
-                    if config.iterator == "linear_prediction":
-                        # linear prediction iterator
-                        # predict where the zero  cost is
-                        prediction = current_value + ( current_cost - bestc) * (bestv - current_value)
-
-                        # if the prediction is in the interval, use it
-                        if in_interval(config.parameters[k].range, prediction):
-                            nps = copy.deepcopy(paramset)
-                            v = range_round(config.parameters[k].range, prediction).item()
-                            nps[k] = v
-                            res = runner.run(nps)
-                            pred_cost = config.cost(res)
-                            print("Cost: %f, value: %f" % (pred_cost, nps[k]))
-                            if pred_cost < bestc: # if it does not lower the cost, fallback to a step
-                                paramset[k] = v
-                                current_cost = pred_cost
-                                print("BEST COST FOUND: %f" % pred_cost)
-                                
-                        else: # if not, step
-                            paramset[k] = bestv
+                            if nps[k] is not None:
+                                res = runner.run(nps)
+                                step_cost = config.cost(res)
+                                print("Cost: %f, value: %f" % (step_cost, nps[k]))
+                                if step_cost < current_cost:
+                                    paramset[k] = nps[k]
+                                    current_cost = step_cost
+                                    current_value = nps[k]
+                                    print("BEST COST FOUND: %f" % step_cost)
+                                    k_local_min=False
 
                             
 '''
