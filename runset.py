@@ -41,12 +41,15 @@ class RunSet:
         self.file.write("\n")
         self.file.flush()
         self.runs.append(r);
-
+        
     def find_run(self, p):
         for r in self.runs:
             found = True
             for k in list(p.keys()):
-                found = found and abs(p[k] - r[k]) < 0.00001
+                if isinstance(p[k], str):
+                    found = found and p[k] == r[k]
+                else:
+                    found = found and abs(p[k] - r[k]) < 0.00001
             if found:
                 return r
         return None
