@@ -1,6 +1,8 @@
 import copy
 import sys
 import numpy as np
+from GPOF.runner import Runner
+from GPOF.runner import cmd_runner_functor
 
 # Hold a parameter range and a value.
 class RV:
@@ -32,6 +34,11 @@ def grid_sampling(runner, config):
         else:
             paramset[k] = config[k][0];
     return grid_sampling_rec(runner, config, list(config.keys()), paramset, 0);
+
+def grid_sampling_cmd(cmd, config, runset_file):
+    fun = cmd_runner_functor(cmd)
+    runner = Runner(fun, runset_file)
+    grid_sampling(runner, config)
 
 class GradientDescentConfig:
     def __init__(self, cost, max_iterations, parameters, iterator = "linear_prediction", constraint=None,starting_point=None):

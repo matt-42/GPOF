@@ -1,5 +1,9 @@
 import multiprocessing as mp
 import numpy as np
+from tempfile import NamedTemporaryFile
+import subprocess as sbp
+import os
+
 from GPOF.runset import open_runset
 from tempfile import mkstemp
 import yaml
@@ -30,7 +34,7 @@ class Runner:
         
         # Run the function.
         r = self.to_optimise(params)
- 
+
         # Merge params and result dicts.
         run = params.copy()
         run.update(r)
@@ -54,3 +58,29 @@ class Runner:
 
         for r in runs:
             self.runset.record(r)
+
+class cmd_runner_functor:
+
+    def __init__(self, cmd):
+        self.cmd = cmd
+    def __call__(self, params):
+
+        # Write the parameters file
+        paramfile = NamedTemporaryFile(mode="w", delete=False)
+        for k in list(params.keys()):
+            paramfile.write("%s = %s\n" % (k, params[k]))
+        paramfile.close()
+
+        # Run the evaluation
+        resultfile = NamedTemporaryFile(delete=False)
+        resultfile.close()
+
+        cmd_str = self.cmd.replace("%config_file", paramfile.name).replace("%result_file", resultfile.name)
+        sbp.call(cmd_str, shell=True)
+
+        # Parse the result file
+        resultfile = open(resultfile.name, 'r')
+        res = yaml.load(resultfile)
+        os.remove(resultfile.name)
+        os.remove(paramfile.name)
+        return res
