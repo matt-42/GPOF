@@ -29,9 +29,19 @@ class RunSet:
         rs = []
         for r in self.runs:
             if filter(r):
-                rs.append([r[cname] for cname in cols])
+                row = []
+                for col in cols:
+                    if isinstance(col, str):
+                        row.append(r[col])
+                    elif callable(col):
+                        row.append(col(r))
+                    else:
+                        raise "RunSet::view error: cols can only be str or callable."
+                    
+                rs.append(row)
 
-        return RunSetView(cols, rs)
+        
+        return RunSetView(cols, sorted(rs, key=lambda x : x[0]))
 
     def add_run(self, r):
         self.runs.append(r)

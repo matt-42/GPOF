@@ -9,17 +9,27 @@ def display_2d_curve(runset, c1, c2):
     plt.plot(runset.col(c1), runset.col(c2), '-')
     plt.show()
 
-def display_2d_points(view):
+
+def display_2d_points(view, marker='o'):
 
     fig = plt.figure(figsize=(6,6), facecolor='white')
     sp = plt.subplot(111)
 
-    A,B = zip(*view.data)
+    if type(view) is dict:
+        for k,v in view.items():
+            A,B = zip(*v.data)
+            sp.set_xlabel(v.col_names[0])
+            sp.set_ylabel(v.col_names[1])
 
-    sp.set_xlabel(view.col_names[0])
-    sp.set_ylabel(view.col_names[1])
+            im = sp.plot(A, B, label=k, marker=marker)
+        sp.legend()
+    else:
+    
+        A,B = zip(*view.data)
+        sp.set_xlabel(view.col_names[0])
+        sp.set_ylabel(view.col_names[1])
+        im = sp.plot(A, B, marker=marker)
 
-    im = sp.plot(A, B, '+')
     fig.show()
  
 def display_2d_colorpoints(view, s=100):
