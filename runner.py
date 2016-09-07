@@ -84,3 +84,6 @@ class cmd_runner_functor:
         os.remove(resultfile.name)
         os.remove(paramfile.name)
         return res
+
+def command_runner(cmd, runset_file):
+    return Runner(cmd_runner_functor(cmd), runset_file)

@@ -107,7 +107,7 @@ constraint: lambda r: r['r1'] < 21
 max_iteration: 200
 iterator: step | linear_prediction
 '''
-def gradient_descent(runner, config):
+def gradient_descent2(runner, config):
 
     # build the initial paramset
     paramset = dict()
@@ -226,7 +226,7 @@ constraint: lambda r: r['r1'] < 21
 max_iteration: 200
 iterator: step | linear_prediction
 '''
-def gradient_descent2(runner, config):
+def gradient_descent(runner, config):
 
     # build the initial paramset
     paramset = dict()
