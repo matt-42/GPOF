@@ -27,8 +27,8 @@ space={
 
 gpof.grid_sampling(runner, space);
 
-# Display a 2D
-gpof.display_2d_points(runner.view(('param1', 'param2')))
+# Display a 2D projection of the space.
+gpof.display_2d_points(runner.view(('param1', 'result')))
 ```
 
 ## Gradient descent
