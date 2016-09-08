@@ -14,7 +14,7 @@ Given a runable "./experiment" taking the config file path and the
 output file path as command line arguments, the following examples
 show how to use the project.
 
-## Grid sampling.
+## Grid sampling
 
 ```python
 runner = gpof.command_runner("results.rs",
