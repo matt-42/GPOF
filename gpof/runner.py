@@ -4,7 +4,7 @@ from tempfile import NamedTemporaryFile
 import subprocess as sbp
 import os
 
-from GPOF.runset import open_runset
+from gpof.runset import open_runset
 from tempfile import mkstemp
 import yaml
 

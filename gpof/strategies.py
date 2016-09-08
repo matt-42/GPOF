@@ -1,8 +1,8 @@
 import copy
 import sys
 import numpy as np
-from GPOF.runner import Runner
-from GPOF.runner import cmd_runner_functor
+from gpof.runner import Runner
+from gpof.runner import cmd_runner_functor
 
 # Hold a parameter range and a value.
 class RV:

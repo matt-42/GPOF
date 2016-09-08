@@ -1,7 +1,6 @@
-from GPOF.strategies import gradient_descent
-from GPOF.runner import command_runner
+import gpof
 
-conf=GradientDescentConfig(
+conf=gpof.GradientDescentConfig(
     # Maximum number of iteration
     max_iterations = 100,
     # Starting point of the descent
@@ -20,5 +19,5 @@ conf=GradientDescentConfig(
     cost = lambda r: r['result2']
 )
 
-r = command_runner("./eval %config_file %result_file", "runset.rs")
-gradient_descent(r, conf)
+r = gpof.command_runner("./eval %config_file %result_file", "runset.rs")
+gpof.gradient_descent(r, conf)
