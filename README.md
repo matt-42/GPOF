@@ -33,7 +33,7 @@ gpof.display_2d_points(runner.view(('param1', 'result')))
 
 ## Gradient descent
 
-```c++
+```python
 conf=gpof.GradientDescentConfig(
     # Maximum number of iteration
     max_iterations = 100,
