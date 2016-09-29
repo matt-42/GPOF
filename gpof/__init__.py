@@ -6,3 +6,4 @@ from .display import display_2d_heatmap
 
 from .strategies import gradient_descent
 from .strategies import grid_sampling
+from .strategies import grid_sampling_cmd
