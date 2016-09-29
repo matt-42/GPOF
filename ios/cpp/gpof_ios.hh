@@ -7,7 +7,7 @@
 namespace gpof
 {
   inline
-  std::map<std::string, std::string> read_configuration(std::string filename)
+  std::map<std::string, std::string> read_parameters(std::string filename)
   {
     std::ifstream f(filename);
 
@@ -39,8 +39,9 @@ namespace gpof
   }
 
   template <typename... T>
-  inline void read_configuration(std::string f, iod::sio<T...>& cfg)
+  inline void read_parameters(std::string f, T&&... values)
   {
+    auto cfg = iod::D(values...);
     auto map = read_configuration(f);
 
     iod::foreach(cfg) | [&] (auto& p)
@@ -60,4 +61,18 @@ namespace gpof
     };
   }
 
+  template <typename... T>
+  inline void write_results(std::string f, T&&... values)
+  {
+    auto results = iod::D(values...);
+
+    std::ofstream file(f);
+    
+    iod::foreach(results) | [&] (auto p)
+    {
+      file << p.symbol_name() << ": " << p.value() << std::endl; 
+    };
+
+  }
+  
 }
