@@ -1,5 +1,8 @@
+#pragma once
 
+#include <regex>
 #include <iod/foreach.hh>
+#include <boost/lexical_cast.hpp>
 
 namespace gpof
 {
@@ -17,7 +20,7 @@ namespace gpof
       std::getline(f, line);
 
       if (line.size() == 0) continue;
-      std::regex e ("\\s*([^\\s]*)\\s*:\\s*([^\\s]*)\\s*");
+      std::regex e ("\\s*([^:\\s]*)\\s*:\\s*([^\\s]*)\\s*");
       std::smatch m;
 
       if (std::regex_search(line,m,e))
