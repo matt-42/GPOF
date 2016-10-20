@@ -39,7 +39,7 @@ namespace gpof
   inline void read_parameters(std::string f, T&&... values)
   {
     auto cfg = iod::D(values...);
-    auto map = read_configuration(f);
+    auto map = read_parameters(f);
 
     iod::foreach(cfg) | [&] (auto& p)
     {
