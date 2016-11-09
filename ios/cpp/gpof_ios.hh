@@ -39,7 +39,7 @@ namespace gpof
   }
 
   template <typename... T>
-  inline void read_parameters(std::string f, T&&... values)
+  inline auto read_parameters(std::string f, T&&... values)
   {
     auto cfg = iod::D(values...);
     auto map = read_parameters(f);
@@ -59,6 +59,8 @@ namespace gpof
         }
       }
     };
+
+    return cfg;
   }
 
   template <typename... T>
