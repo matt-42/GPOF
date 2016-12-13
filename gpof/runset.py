@@ -47,9 +47,10 @@ class RunSet:
         self.runs.append(r)
 
     def record(self, r):
-        json.dump(r, self.file, sort_keys=True)
-        self.file.write("\n")
-        self.file.flush()
+        if hasattr(self, 'file') and self.file is not None:
+            json.dump(r, self.file, sort_keys=True)
+            self.file.write("\n")
+            self.file.flush()
         self.runs.append(r);
         
     def find_run(self, p):
@@ -64,31 +65,37 @@ class RunSet:
                 return r
         return None
 
+def select_best_run(runset, cost):
+    min_cost = cost(runset.runs[0])
+    best_run = runset.runs[0]
+    for r in runset.runs:
+        c = cost(r)
+        if c < min_cost:
+            best_run = r
+            min_cost = c
+    return r
+
 # Open a runset
 # Create it if it does not exists yet.
-# Pass Name = None if the runset already exists.
-def open_runset(filename, name = None):
+def open_runset(filename = None):
 
-    if os.path.exists(filename) and not os.path.isfile(filename):
+    if filename is not None and os.path.exists(filename) and not os.path.isfile(filename):
         raise Exception("%s exists but it is not a file." % filename)
     
-    if name is not None or not os.path.exists(filename):
-        # Creation
-        if not os.path.exists(filename):
-            f = open(filename, 'w')
-            f.write("%s\n" % name)
-            f.close()
-        # It now  exists, recall the function with name = none
-        return open_runset(filename, None)
+    rs = RunSet()
 
+    # Creation of a in memory only runset (not saved in a file)
+    if not filename:
+        return rs
+
+    # Creation of a file runset
+    elif not os.path.exists(filename):
+        rs.file=open(filename, 'w')
+        return rs
+
+    # Open an existing runset
     else:
-        # Open an existing runset
-        if not os.path.exists(filename):
-            raise Exception("Runset file %s does not exists" % filename)
         f = open(filename, 'r+')
-
-        rs = RunSet()
-        rs.name = f.readline().rstrip()
         rs.file = f
         runs_str = f.read()
         decoder = json.JSONDecoder();
@@ -100,7 +107,7 @@ def open_runset(filename, name = None):
     
     return rs;
 
-def open_runset_from_google_benchmark(filename, name = None):
+def open_runset_from_google_benchmark(filename):
     f = open(filename, 'r+')
     results = json.load(f)['benchmarks']
     sets = {}
@@ -109,7 +116,6 @@ def open_runset_from_google_benchmark(filename, name = None):
 
         if not name in sets:
             sets.update({name: RunSet()})
-            sets[name].name = name
         run = {}
         params = r['name'].split('/')
 

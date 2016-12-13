@@ -12,12 +12,10 @@ def runset_parallel_run_process(rs, params):
     return rs.run_impl(params)
 
 class Runner:
-    def __init__(self, to_optimise, filename, run_name = None, nprocesses = 4):
+    def __init__(self, to_optimise, filename = None, nprocesses = 4):
         self.to_optimise = to_optimise
-        self.runset = open_runset(filename, run_name)
+        self.runset = open_runset(filename)
         self.nprocesses = nprocesses
-
-
 
     def run_impl(self, params):
 
@@ -35,9 +33,10 @@ class Runner:
         # Run the function.
         r = self.to_optimise(params)
 
-        # Merge params and result dicts.
-        run = params.copy()
-        run.update(r)
+        if r is not None:
+            # Merge params and result dicts.
+            run = params.copy()
+            run.update(r)
 
         return run
         
@@ -68,7 +67,7 @@ class cmd_runner_functor:
         # Write the parameters file
         paramfile = NamedTemporaryFile(mode="w", delete=False)
         for k in list(params.keys()):
-            paramfile.write("%s = %s\n" % (k, params[k]))
+            paramfile.write("%s: %s\n" % (k, params[k]))
         paramfile.close()
 
         # Run the evaluation
@@ -81,9 +80,10 @@ class cmd_runner_functor:
         # Parse the result file
         resultfile = open(resultfile.name, 'r')
         res = yaml.load(resultfile)
+        print(resultfile.name)
         os.remove(resultfile.name)
         os.remove(paramfile.name)
         return res
 
-def command_runner(cmd, runset_file):
+def command_runner(cmd, runset_file = None):
     return Runner(cmd_runner_functor(cmd), runset_file)

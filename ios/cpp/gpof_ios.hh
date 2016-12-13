@@ -1,6 +1,9 @@
 #pragma once
 
+#include <fstream>
+#include <string>
 #include <regex>
+#include <map>
 #include <iod/foreach.hh>
 #include <boost/lexical_cast.hpp>
 
