@@ -2,7 +2,7 @@ import multiprocessing as mp
 import numpy as np
 from tempfile import NamedTemporaryFile
 import subprocess as sbp
-import os
+import os, sys, json
 
 from gpof.runset import open_runset
 from tempfile import mkstemp
@@ -66,10 +66,14 @@ class cmd_runner_functor:
 
         # Write the parameters file
         paramfile = NamedTemporaryFile(mode="w", delete=False)
-        for k in list(params.keys()):
-            paramfile.write("%s: %s\n" % (k, params[k]))
+        yaml.dump(params, paramfile, allow_unicode=True, default_flow_style=False)
+        #for k in list(params.keys()):
+        #    paramfile.write("%s: %s\n" % (k, params[k]))
         paramfile.close()
 
+        with open(paramfile.name) as f:
+            print(f.read())
+            
         # Run the evaluation
         resultfile = NamedTemporaryFile(delete=False)
         resultfile.close()

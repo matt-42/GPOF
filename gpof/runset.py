@@ -1,5 +1,6 @@
-import os.path
+import os.path, sys
 import json
+from gpof.linearized_dict import LinearizedDict, LinearizedDictKey, linearized_to_deep_dict
 
 class RunSetView:
     def __init__(self, col_names, data):
@@ -54,13 +55,15 @@ class RunSet:
         self.runs.append(r);
         
     def find_run(self, p):
+        pld = LinearizedDict(p)
         for r in self.runs:
             found = True
-            for k in list(p.keys()):
-                if isinstance(p[k], str):
-                    found = found and p[k] == r[k]
+            rld = LinearizedDict(r)
+            for k in pld.keys():
+                if isinstance(pld[k], str):
+                    found = found and pld[k] == rld[k]
                 else:
-                    found = found and abs(p[k] - r[k]) < 0.00001
+                    found = found and abs(pld[k] - rld[k]) < 0.00001
             if found:
                 return r
         return None

@@ -1,6 +1,8 @@
 import copy
 import sys
 import numpy as np
+from gpof.linearized_dict import LinearizedDict, LinearizedDictKey, linearized_to_deep_dict
+
 from gpof.runner import Runner
 from gpof.runner import cmd_runner_functor
 
@@ -44,9 +46,9 @@ class GradientDescentConfig:
     def __init__(self, cost, max_iterations, parameters, iterator = "linear_prediction", constraint=None,starting_point=None):
         self.cost = cost
         self.max_iterations = max_iterations
-        self.parameters = parameters
+        self.parameters = LinearizedDict(parameters)
         self.iterator = iterator
-        self.starting_point = starting_point
+        self.starting_point = LinearizedDict(starting_point)
         if constraint:
             self.constraint = constraint
         else:
@@ -55,7 +57,7 @@ class GradientDescentConfig:
 
 def prev_value_in_range(range, v):
     for idx, e in enumerate(range):
-        if abs(v - e) < 0.0001:
+        if (type(v) is str and v == e) or (type(v) is not str and abs(v - e) < 0.0001):
             if idx == 0:
                 return None
             else:
@@ -63,12 +65,17 @@ def prev_value_in_range(range, v):
 
 def next_value_in_range(range, v):
     for idx, e in enumerate(range):
-        if abs(v - e) < 0.0001:
+        if (type(v) is str and v == e) or (type(v) is not str and abs(v - e) < 0.0001):
             if idx == (len(range) - 1):
                 return None
             else:
                 return range[idx + 1]
 
+def position_in_range(range, v):
+    for idx, e in enumerate(range):
+        if (type(v) is str and v == e) or (type(v) is not str and abs(v - e) < 0.0001):
+            return idx
+    
 def in_interval(range, v):
     return v >= range[0] and v <= range[-1]
 
@@ -179,7 +186,7 @@ def gradient_descent2(runner, config):
                         nps = copy.deepcopy(paramset)
                         v = range_round(config.parameters[k], prediction).item()
                         nps[k] = v
-                        res = runner.run(nps)
+                        res = runner.run(linearized_to_deep_dict(nps))
                         pred_cost = config.cost(res)
                         print("Cost: %f, value: %f" % (pred_cost, nps[k]))
                         if pred_cost < bestc: # if it does not lower the cost, fallback to a step
@@ -219,22 +226,23 @@ def gradient_descent(runner, config):
     if config.starting_point is None:
         for k in list(config.parameters.keys()):
             direction[k] = 1
-            if type(config.parameters[k]) is not RV:
+            if type(config.parameters[k]) is not list:
                 paramset[k] = config.parameters[k];
             else:
-                paramset[k] = config.parameters[k].value;
+                paramset[k] = config.parameters[k][0];
     else:
         for k in list(config.parameters.keys()):
             direction[k] = 1
-            if type(config.parameters[k]) is not RV:
+            if type(config.parameters[k]) is not list:
                 paramset[k] = type(config.parameters[k])(config.starting_point[k]);
             else:
-                paramset[k] = type(config.parameters[k].value)(config.starting_point[k]);
+                paramset[k] = type(config.parameters[k][0])(config.starting_point[k]);
             
     
     # Test if it satisfies the constraint.    
-    res = runner.run(paramset)
+    res = runner.run(linearized_to_deep_dict(paramset))
     current_cost = config.cost(res)
+    print ("first run, cost = ", current_cost)
     if not config.constraint(res):
         print("Gradient descent error: The initial paramset does not satisfy the givent constraint.")
         return
@@ -247,12 +255,12 @@ def gradient_descent(runner, config):
         local_minimum=True
         for k in sorted(config.parameters.keys()):
             # For each non fixed parameter
-            if type(config.parameters[k]) is  RV:
+            if type(config.parameters[k]) is list:
                 print("=================== Optimize parameter %s" % k)
 
                 current_value=paramset[k]
-                value1 = prev_value_in_range(config.parameters[k].range, current_value)
-                value2 = next_value_in_range(config.parameters[k].range, current_value)
+                value1 = prev_value_in_range(config.parameters[k], current_value)
+                value2 = next_value_in_range(config.parameters[k], current_value)
 
                 if direction[k] and direction[k] > 0:
                     value1,value2 = value2,value1
@@ -265,9 +273,9 @@ def gradient_descent(runner, config):
                         nps = copy.deepcopy(paramset)
                         nps[k] = v
                         #   Run the function
-                        res = runner.run(nps)
+                        res = runner.run(linearized_to_deep_dict(nps))
                         nps_cost = config.cost(res)
-                        print("Cost: %f, value: %f" % (nps_cost, v))
+                        print("Cost: %f, %s == " % (nps_cost, str(k)), v)
                         vcosts.append([v, nps_cost])
                         if nps_cost < current_cost:
                             break
@@ -282,7 +290,7 @@ def gradient_descent(runner, config):
 
 
                 if bestv is not None and bestc < current_cost:
-                    direction[k] = bestv - current_value # save the direction for the next step.
+                    direction[k] = position_in_range(config.parameters[k], bestv) - position_in_range(config.parameters[k], current_value) # save the direction for the next step.
                     local_minimum=False
                     prev_value = current_value
                     prev_cost = current_cost
@@ -301,35 +309,36 @@ def gradient_descent(runner, config):
                         # linear prediction iterator
                         # predict where the zero  cost is
                         #prediction = current_value + ( current_cost - bestc) * (bestv - current_value)
-                        prediction = prev_value + prev_cost * (current_value - prev_value) / ( prev_cost - current_cost)
-
-                        # if the prediction is in the interval, use it
-                        if in_interval(config.parameters[k].range, prediction):
-                            nps = copy.deepcopy(paramset)
-                            v = range_round(config.parameters[k].range, prediction).item()
-                            nps[k] = v
-                            res = runner.run(nps)
-                            pred_cost = config.cost(res)
-                            print("Cost: %f, value: %f" % (pred_cost, nps[k]))
-                            if pred_cost < current_cost: # if it does not lower the cost, fallback to a step
-                                paramset[k] = v
-                                current_cost = pred_cost
-                                current_value = v
-                                print("BEST COST FOUND: %f" % pred_cost)
-                                k_local_min=False
+                        if type(current_value) is not str:
+                            prediction = prev_value + prev_cost * (current_value - prev_value) / ( prev_cost - current_cost)
+                            
+                            # if the prediction is in the interval, use it
+                            if in_interval(config.parameters[k], prediction):
+                                nps = copy.deepcopy(paramset)
+                                v = range_round(config.parameters[k], prediction).item()
+                                nps[k] = v
+                                res = runner.run(linearized_to_deep_dict(nps))
+                                pred_cost = config.cost(res)
+                                print("Cost: %f, %s == " % (pred_cost, k), nps[k])
+                                if pred_cost < current_cost: # if it does not lower the cost, fallback to a step
+                                    paramset[k] = v
+                                    current_cost = pred_cost
+                                    current_value = v
+                                    print("BEST COST FOUND: %f" % pred_cost)
+                                    k_local_min=False
 
                         if k_local_min:
                             nps = copy.deepcopy(paramset)
 
                             if direction[k] < 0:
-                                nps[k] = prev_value_in_range(config.parameters[k].range, current_value)
+                                nps[k] = prev_value_in_range(config.parameters[k], current_value)
                             else:
-                                nps[k] = next_value_in_range(config.parameters[k].range, current_value)
+                                nps[k] = next_value_in_range(config.parameters[k], current_value)
 
                             if nps[k] is not None:
-                                res = runner.run(nps)
+                                res = runner.run(linearized_to_deep_dict(nps))
                                 step_cost = config.cost(res)
-                                print("Cost: %f, value: %f" % (step_cost, nps[k]))
+                                print("Cost: %f, %s == " % (step_cost, k), nps[k])
                                 if step_cost < current_cost:
                                     paramset[k] = nps[k]
                                     current_cost = step_cost
